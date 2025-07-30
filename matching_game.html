@@ -1,0 +1,219 @@
+<<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>เกมจับคู่คำราชาศัพท์</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px auto; max-width: 800px; text-align: center; }
+    h2 { margin-bottom: 10px; color: #0066cc; }
+    .container {
+      display: flex;
+      justify-content: space-between;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    .column {
+      width: 45%;
+    }
+    .column h3 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .item {
+      background: #eef;
+      padding: 10px;
+      margin: 8px 0;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+    .item:hover {
+      background: #dde;
+    }
+    .selected { background: #cfc; }
+    .matched { background: #afa; cursor: default; }
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    .correct { color: green; }
+    .wrong { color: red; }
+    .score { color: #cc00cc; }
+    .answer-box {
+      margin-top: 30px;
+      text-align: left;
+      background-color: #f0fff0;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    .answer-box h4 {
+      color: #006600;
+      margin-bottom: 10px;
+    }
+    .answer-line {
+      margin: 3px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎯 เกมจับคู่: คำราชาศัพท์ ↔ คำสามัญ</h2>
+  <p>คลิกเลือกคำราชาศัพท์ฝั่งซ้าย จากนั้นคลิกคำสามัญที่ตรงกันทางขวา</p>
+
+  <div class="container">
+    <div id="left" class="column">
+      <h3>👑 คำราชาศัพท์</h3>
+    </div>
+    <div id="right" class="column">
+      <h3>🙋 คำสามัญ</h3>
+    </div>
+  </div>
+
+  <div id="message"></div>
+  <div id="score" class="score">คะแนน: 0</div>
+  <div id="answers" class="answer-box" style="display:none;"></div>
+
+  <script>
+    const pairs = [
+      { royal: "เสวย", common: "กิน" },
+      { royal: "พระราชโอรส", common: "ลูกชาย" },
+      { royal: "พระราชดำเนิน", common: "เดิน" },
+      { royal: "พระหัตถ์", common: "มือ" },
+      { royal: "พระพักตร์", common: "หน้า" },
+      { royal: "สวรรคต", common: "ตาย" },
+      { royal: "ทรงพระดำริ", common: "คิด" },
+      { royal: "พระเนตร", common: "ตา" },
+      { royal: "พระกรรณ", common: "หู" },
+      { royal: "พระราชทาน", common: "ให้" }
+    ];
+
+    let selectedRoyal = null;
+    let selectedCommon = null;
+    let matched = 0;
+    let score = 0;
+
+    function shuffle(arr) {
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
+    function setup() {
+      const leftDiv = document.getElementById("left");
+      const rightDiv = document.getElementById("right");
+      document.getElementById("message").textContent = "";
+      document.getElementById("score").textContent = "คะแนน: 0";
+      document.getElementById("answers").style.display = "none";
+      document.getElementById("answers").innerHTML = "";
+
+      matched = 0;
+      score = 0;
+      selectedRoyal = null;
+      selectedCommon = null;
+
+      const royalWords = shuffle([...pairs]);
+      const commonWords = shuffle(pairs.map(p => p.common));
+
+      leftDiv.innerHTML = "<h3>👑 คำราชาศัพท์</h3>";
+      rightDiv.innerHTML = "<h3>🙋 คำสามัญ</h3>";
+
+      royalWords.forEach(item => {
+        const div = document.createElement("div");
+        div.textContent = item.royal;
+        div.className = "item";
+        div.onclick = () => selectRoyal(div, item.royal);
+        leftDiv.appendChild(div);
+      });
+
+      commonWords.forEach(word => {
+        const div = document.createElement("div");
+        div.textContent = word;
+        div.className = "item";
+        div.onclick = () => selectCommon(div, word);
+        rightDiv.appendChild(div);
+      });
+    }
+
+    function selectRoyal(div, word) {
+      if (div.classList.contains("matched")) return;
+      if (selectedRoyal) selectedRoyal.classList.remove("selected");
+      selectedRoyal = div;
+      div.classList.add("selected");
+      checkMatch();
+    }
+
+    function selectCommon(div, word) {
+      if (div.classList.contains("matched")) return;
+      if (selectedCommon) selectedCommon.classList.remove("selected");
+      selectedCommon = div;
+      div.classList.add("selected");
+      checkMatch();
+    }
+
+    function checkMatch() {
+      if (selectedRoyal && selectedCommon) {
+        const royalText = selectedRoyal.textContent;
+        const commonText = selectedCommon.textContent;
+        const pair = pairs.find(p => p.royal === royalText && p.common === commonText);
+
+        if (pair) {
+          selectedRoyal.classList.add("matched");
+          selectedCommon.classList.add("matched");
+          matched++;
+          score++;
+          showMessage("✅ ถูกต้อง!", "correct");
+        } else {
+          score = Math.max(0, score - 1);
+          showMessage("❌ ผิด ลองใหม่!", "wrong");
+        }
+
+        updateScore();
+
+        selectedRoyal.classList.remove("selected");
+        selectedCommon.classList.remove("selected");
+        selectedRoyal = null;
+        selectedCommon = null;
+
+        if (matched === pairs.length) {
+          showMessage("🎉 เยี่ยมมาก! จับคู่ครบทั้งหมดแล้ว!", "correct");
+          showAnswers();
+        }
+      }
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById("message");
+      msg.textContent = text;
+      msg.className = type;
+    }
+
+    function updateScore() {
+      document.getElementById("score").textContent = "คะแนน: " + score;
+    }
+
+    function showAnswers() {
+      const box = document.getElementById("answers");
+      box.style.display = "block";
+      box.innerHTML = "<h4>📘 เฉลยคำราชาศัพท์ทั้งหมด:</h4>";
+      pairs.forEach(pair => {
+        const line = document.createElement("div");
+        line.className = "answer-line";
+        line.innerHTML = `<strong>${pair.royal}</strong> = <span style="color: blue;">${pair.common}</span>`;
+        box.appendChild(line);
+      });
+    }
+
+    setup();
+  </script> 
+    <div style="margin-top: 40px; padding: 15px; background: #e6f2ff; border-radius: 10px;">
+        <h3 style="color: #004080;">👥 สมาชิกผู้จัดทำ</h3>
+        <ul style="list-style: none; padding-left: 0; font-size: 1.1em;">
+          <li>1. นางสาวภคพร โถงาม</li>
+          <li>2. นางสาวกมลชนก วิริยา</li>
+          <li>3. สยาม</li>
+        </ul>
+      </div>
+    
+</body>
+</html>
