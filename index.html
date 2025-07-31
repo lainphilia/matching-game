@@ -31,7 +31,7 @@
     }
     .item:hover { background: #dde; }
     .selected { border: 2px solid #999; }
-    .matched { background: #afa; cursor: default; }
+    .matched { cursor: default; }
     .correct-match { background: #cfc !important; }
     .wrong-match { background: #fbb !important; }
     .hidden { display: none; }
@@ -197,17 +197,23 @@
       const pair = pairs.find(p => p.royal === royalText && p.common === commonText);
 
       if (pair) {
+        // ลบคลาสผิดก่อนถ้ามี
+        selectedRoyal.classList.remove("wrong-match");
+        selectedCommon.classList.remove("wrong-match");
+
         selectedRoyal.classList.add("matched", "correct-match");
         selectedCommon.classList.add("matched", "correct-match");
-        matched++; score++;
+
+        matched++;
+        score++;
         showMessage("✅ ถูกต้อง!", "correct");
       } else {
         selectedRoyal.classList.add("wrong-match");
         selectedCommon.classList.add("wrong-match");
+
         score = Math.max(0, score - 1);
         showMessage("❌ ผิด ลองใหม่!", "wrong");
 
-        // ลบสีผิดหลัง 1 วินาที
         setTimeout(() => {
           selectedRoyal.classList.remove("wrong-match");
           selectedCommon.classList.remove("wrong-match");
@@ -266,6 +272,5 @@
     }, 1000);
   }
 </script>
-  
 </body>
 </html>
