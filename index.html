@@ -80,7 +80,7 @@
   <p>กรอกชื่อของคุณ (หรือปล่อยว่างก็ได้)</p>
   <input type="text" id="playerName" placeholder="ชื่อตัวอย่าง: สมชาย">
   <br>
-  <button onclick="startGame()">เริ่มเกม</button>
+  <button id="startButton">เริ่มเกม</button>
 </div>
 
 <div id="game-screen">
@@ -125,6 +125,8 @@
 
   let selectedRoyal = null, selectedCommon = null;
   let matched = 0, score = 0, timeLeft = 300, timerInterval;
+
+  document.getElementById("startButton").addEventListener("click", startGame);
 
   function shuffle(arr) {
     return arr.sort(() => Math.random() - 0.5);
@@ -197,7 +199,6 @@
       const pair = pairs.find(p => p.royal === royalText && p.common === commonText);
 
       if (pair) {
-        // ลบคลาสผิดก่อนถ้ามี
         selectedRoyal.classList.remove("wrong-match");
         selectedCommon.classList.remove("wrong-match");
 
@@ -206,13 +207,18 @@
 
         matched++;
         score++;
-        showMessage("✅ ถูกต้อง!", "correct");
+        timeLeft = Math.min(timeLeft + 10, 300);
+        updateTimerDisplay();
+
+        showMessage("✅ ถูกต้อง! +10 วินาที", "correct");
       } else {
         selectedRoyal.classList.add("wrong-match");
         selectedCommon.classList.add("wrong-match");
 
-        score = Math.max(0, score - 1);
-        showMessage("❌ ผิด ลองใหม่!", "wrong");
+        timeLeft = Math.max(0, timeLeft - 20);
+        updateTimerDisplay();
+
+        showMessage("❌ ผิด -20 วินาที", "wrong");
 
         setTimeout(() => {
           selectedRoyal.classList.remove("wrong-match");
@@ -221,7 +227,6 @@
       }
 
       updateScore();
-
       selectedRoyal.classList.remove("selected");
       selectedCommon.classList.remove("selected");
       selectedRoyal = selectedCommon = null;
@@ -256,7 +261,14 @@
     });
   }
 
+  function updateTimerDisplay() {
+    const min = Math.floor(timeLeft / 60);
+    const sec = timeLeft % 60;
+    document.getElementById("timer").textContent = `⏳ เหลือเวลา: ${min}:${sec.toString().padStart(2, '0')}`;
+  }
+
   function startTimer() {
+    updateTimerDisplay();
     timerInterval = setInterval(() => {
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
@@ -264,11 +276,8 @@
         showMessage("⛔ เวลาหมด! เริ่มใหม่หรือรีเซ็ตเพื่อเล่นอีกครั้ง", "wrong");
         return;
       }
-
       timeLeft--;
-      const min = Math.floor(timeLeft / 60);
-      const sec = timeLeft % 60;
-      document.getElementById("timer").textContent = `⏳ เหลือเวลา: ${min}:${sec.toString().padStart(2, '0')}`;
+      updateTimerDisplay();
     }, 1000);
   }
 </script>
